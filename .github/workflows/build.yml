@@ -18,6 +18,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug Quellstruktur src/
+        run: |
+          echo "Files in src/:"
+          ls -lh src/ || echo "src/ fehlt oder leer!"
+          echo "Repo-Baum:"
+          find . | sort
+
       - name: Build main PokeEdit NRO + Bundle
         run: |
           make clean
