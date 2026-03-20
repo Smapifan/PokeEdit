@@ -35,7 +35,7 @@ jobs:
           env | sort
           echo "==== DEVKITPRO: $DEVKITPRO ===="
 
-      - name: Debug: Zeige imgui-Ordner (falls vorhanden)
+      - name: Debug Zeige imgui-Ordner (falls vorhanden)
         run: ls -lh imgui || echo "imgui fehlt oder nicht geclont"
 
       - name: Build NRO (mit expliziten Logs)
