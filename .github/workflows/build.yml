@@ -1,4 +1,4 @@
-name: Build & Upload PokeEdit.nro (devkitPro Setup Script)
+name: Build & Upload PokeEdit.nro (mit devkitPro/ci-action)
 
 on:
   push:
@@ -14,21 +14,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Installiere devkitPro Toolchain
-        run: |
-          wget https://apt.devkitpro.org/install-devkitpro.sh
-          chmod +x install-devkitpro.sh
-          sudo ./install-devkitpro.sh
-          echo "==== Toolchain installiert ===="
-          devkitA64 --version || echo "devkitA64 nicht installiert"
-          which aarch64-none-elf-g++ || echo "Compiler fehlt"
-          aarch64-none-elf-g++ --version || echo "Compiler-Version nicht abrufbar"
-
+      - name: Install devkitPro toolchain (switch)
+        uses: devkitPro/ci-action@v1
+        with:
+          dkptype: 'switch'
+      
       - name: Build NRO mit ausführlichem Log
         run: |
           make clean
-          make V=1 || { echo 'MAKE FEHLER'; exit 1; }
-          ls -lh build/ || echo "build/ fehlt"
+          make V=1
+          ls -lh build/
           find . -name "*.nro"
 
       - name: Upload PokeEdit.nro als Artifact
