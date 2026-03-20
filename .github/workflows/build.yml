@@ -1,4 +1,4 @@
-name: Build & Upload PokeEdit.nro (offizielle devkitPro Toolchain)
+name: Build & Upload PokeEdit.nro (devkitPro Setup Script)
 
 on:
   push:
@@ -10,46 +10,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: devkitpro/devkitpro:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Zeige Verzeichnisstruktur (frisch geclont)
+      - name: Installiere devkitPro Toolchain
         run: |
-          echo "==== Aktueller Repo-Baum ===="
-          tree -L 3 || find . | sort
-          echo "==== Files in source/ ===="
-          ls -lh source/ || echo "source fehlt!"
-          echo "==== Zeige .gitignore und Makefile ===="
-          cat .gitignore || echo "Keine .gitignore vorhanden"
-          cat Makefile || echo "Makefile fehlt"
-
-      - name: Zeige Toolchain + ENV
-        run: |
-          echo "==== Toolchain ===="
+          wget https://apt.devkitpro.org/install-devkitpro.sh
+          chmod +x install-devkitpro.sh
+          sudo ./install-devkitpro.sh
+          echo "==== Toolchain installiert ===="
+          devkitA64 --version || echo "devkitA64 nicht installiert"
           which aarch64-none-elf-g++ || echo "Compiler fehlt"
           aarch64-none-elf-g++ --version || echo "Compiler-Version nicht abrufbar"
-          echo "==== ENV ===="
-          env | sort
-          echo "DEVKITPRO: $DEVKITPRO"
 
-      - name: Build NRO (mit ausführlichem Log)
+      - name: Build NRO mit ausführlichem Log
         run: |
-          echo "==== make clean ===="
           make clean
-          echo "==== make V=1 (voller Buildlog) ===="
           make V=1 || { echo 'MAKE FEHLER'; exit 1; }
-          echo "==== Build-Ordner danach ===="
           ls -lh build/ || echo "build/ fehlt"
-          find . -name "*.nro" -exec ls -lh {} \;
-          tree -L 3 || find . | sort
-
-      - name: Zeige Content der Build-Datei(en)
-        run: |
-          echo "==== file build/PokeEdit.nro ===="
-          file build/PokeEdit.nro || echo "PokeEdit.nro fehlt"
+          find . -name "*.nro"
 
       - name: Upload PokeEdit.nro als Artifact
         uses: actions/upload-artifact@v4
