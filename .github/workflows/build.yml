@@ -5,34 +5,24 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    container:
+      image: ghcr.io/devkitpro/devkita64:latest
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install devkitPro manually (via github installer)
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git curl python3 build-essential
-          git clone --depth=1 https://github.com/devkitPro/installer.git
-          cd installer
-          sudo python3 dkp_install.py --toolchains=devkitA64 --libraries=libnx
-          cd ..
+          apt-get update
+          apt-get install -y curl git python3
 
-      - name: Set environment variables
+      - name: Download GUI extensions (ImGui, stb_image, json)
         run: |
-          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
-          echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
-          echo "DEVKITA64=/opt/devkitpro/devkitA64" >> $GITHUB_ENV
-          echo "/opt/devkitpro/devkitA64/bin" >> $GITHUB_PATH
-
-      - name: Fetch GUI dependencies (ImGui, stb_image, nlohmann/json)
-        run: |
-          git clone --depth=1 https://github.com/ocornut/imgui.git include/imgui
+          git clone --depth=1 https://github.com/ocornut/imgui include/imgui
           mkdir -p lib
           curl -L -o lib/stb_image.h https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
           mkdir -p nlohmann
           curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
 
-      - name: Build
+      - name: Build project
         run: make all
