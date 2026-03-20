@@ -1,38 +1,39 @@
-name: Build PokeEdit.nro (Switch Homebrew)
+name: Build PokeEdit.nro bundle
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    container:
-      # ERSETZE durch deinen eigenen DockerHub- oder ghcr.io-Container
-      image: meinuser/devkitpro-switch:latest
-
+    permissions:
+      contents: read
     steps:
-      - name: Checkout sources
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies (curl, git, python3)
+      - name: Install devkitPro toolchain
         run: |
-          apt-get update
-          apt-get install -y curl git python3
+          sudo apt-get update
+          sudo apt-get install -y build-essential git curl python3 wget
+          wget https://apt.devkitpro.org/install-devkitpro-pacman
+          chmod +x install-devkitpro-pacman
+          sudo ./install-devkitpro-pacman -y
+          sudo dkp-pacman -Syu --noconfirm
+          sudo dkp-pacman -S --noconfirm devkitA64 libnx switch-tools
 
-      - name: Fetch GUI/includes (ImGui, stb_image, nlohmann/json)
+      - name: Set environment variables
         run: |
-          git clone --depth=1 https://github.com/ocornut/imgui include/imgui
-          mkdir -p lib
-          curl -L -o lib/stb_image.h https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
-          mkdir -p nlohmann
-          curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
+          echo "DEVKITA64=/opt/devkitpro/devkitA64" >> $GITHUB_ENV
+          echo "/opt/devkitpro/devkitA64/bin" >> $GITHUB_PATH
 
-      - name: Build NRO
+      - name: Build project, fetches all includes/libs
         run: |
+          make clean
           make all
 
-      - name: Upload Resulting NRO
+      - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: PokeEdit.nro
-          path: PokeEdit.nro
+          name: PokeEdit-release
+          path: Release/
