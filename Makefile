@@ -2,41 +2,40 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif
 
-CFLAGS   += -Isource -Iimgui -Ilib -Inlohmann
-CXXFLAGS += -Isource -Iimgui -Ilib -Inlohmann
-
 include $(DEVKITPRO)/libnx/switch_rules
 
-TARGET      := PokeEdit
-APP_TITLE   := PokeEdit
-APP_AUTHOR  := Smapifan
+TARGET    := build/PokeEdit
+OUTPUT    := $(TARGET)
+APP_TITLE := PokeEdit
+APP_AUTHOR := Smapifan
 APP_VERSION := 1.0.0
-ROMFS       := assets
-ICON        := assets/icon.png
 
-.PHONY: all clean ensure-imgui ensure-stbimg ensure-json ensure-release
+# ==== Abhängigkeiten automatisch holen (z.B. ImGui) ====
+IMGUI_TAG ?= v1.91.6
 
+# Hole ImGui, falls noch nicht da
 ensure-imgui:
 	@if [ ! -f imgui/imgui.h ]; then \
-		echo "Cloning ImGui ..."; \
-		git clone --depth=1 https://github.com/ocornut/imgui.git imgui; \
+		echo "Cloning Dear ImGui $(IMGUI_TAG)..."; \
+		git clone --depth=1 --branch $(IMGUI_TAG) https://github.com/ocornut/imgui.git imgui; \
 	fi
 
-ensure-stbimg:
-	@if [ ! -f lib/stb_image.h ]; then \
-		echo "Downloading stb_image.h ..."; \
-		mkdir -p lib; \
-		curl -L -o lib/stb_image.h https://raw.githubusercontent.com/nothings/stb/master/stb_image.h; \
-	fi
+# ==== Safety: Nur existierende Quellen-Verzeichnisse ====
+SRC_DIRS := source source/ui source/backends imgui
+EXISTING_DIRS := $(foreach dir,$(SRC_DIRS),$(if $(wildcard $(dir)),$(dir),))
+SOURCES := $(shell find $(EXISTING_DIRS) -type f -name '*.cpp' 2>/dev/null)
+INCLUDES := $(foreach dir,$(EXISTING_DIRS),-I$(dir)) -Iimgui/backends
+ROMFS := assets
+ICON := assets/icon.png
 
-ensure-json:
-	@if [ ! -f nlohmann/json.hpp ]; then \
-		echo "Downloading nlohmann/json.hpp ..."; \
-		mkdir -p nlohmann; \
-		curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp; \
-	fi
+.PHONY: all ensure-imgui clean
 
-all: ensure-imgui ensure-stbimg ensure-json $(TARGET).nro
+all: ensure-imgui $(OUTPUT).nro
+
+$(OUTPUT).nro: $(OUTPUT).elf $(OUTPUT).nacp
+$(OUTPUT).elf: $(OFILES)
+
+-include $(OFILES:.o=.d)
 
 clean:
-	rm -rf build imgui lib nlohmann Release PokeEdit.nro
+	rm -f $(OUTPUT).elf $(OUTPUT).nacp $(OUTPUT).nro *.o *.d
