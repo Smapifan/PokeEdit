@@ -5,15 +5,34 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: dcarrigg/switch-dev:latest
+
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
-      - name: Install dependencies
+
+      - name: Install devkitPro manually (via github installer)
         run: |
-          apt-get update
-          apt-get install -y curl git python3
+          sudo apt-get update
+          sudo apt-get install -y git curl python3 build-essential
+          git clone --depth=1 https://github.com/devkitPro/installer.git
+          cd installer
+          sudo python3 dkp_install.py --toolchains=devkitA64 --libraries=libnx
+          cd ..
+
+      - name: Set environment variables
+        run: |
+          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
+          echo "DEVKITARM=/opt/devkitpro/devkitARM" >> $GITHUB_ENV
+          echo "DEVKITA64=/opt/devkitpro/devkitA64" >> $GITHUB_ENV
+          echo "/opt/devkitpro/devkitA64/bin" >> $GITHUB_PATH
+
+      - name: Fetch GUI dependencies (ImGui, stb_image, nlohmann/json)
+        run: |
+          git clone --depth=1 https://github.com/ocornut/imgui.git include/imgui
+          mkdir -p lib
+          curl -L -o lib/stb_image.h https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
+          mkdir -p nlohmann
+          curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+
       - name: Build
-        run: |
-          make all
+        run: make all
