@@ -1,14 +1,16 @@
-TARGET    := build/PokeEdit
-OUTPUT    := $(TARGET).nro
-SRC_DIR   := source
-SOURCES   := $(wildcard $(SRC_DIR)/*.cpp)
-INCLUDES  := -I$(SRC_DIR) -Iimgui -Ilib -Inlohmann
-ROMFS     := assets
-ICON      := assets/icon.png
+TARGET       := build/PokeEdit
+OUTPUT_NRO   := $(TARGET).nro
+SRC_DIR      := source
+SOURCES      := $(wildcard $(SRC_DIR)/*.cpp)
+INCLUDES     := -I$(SRC_DIR) -Iimgui -Ilib -Inlohmann
+ROMFS        := assets
+ICON         := assets/icon.png
 
-.PHONY: all clean ensure-imgui ensure-stbimg ensure-json ensure-release
+.PHONY: all clean ensure-imgui ensure-stbimg ensure-json release-dirs release-bundle
 
-# ==== Downloads für ImGui, stb_image, nlohmann/json ====
+all: release-bundle
+
+# == Dynamic Includes: Wie bei PKMswitch nur frisch beim Build! ==
 ensure-imgui:
 	@if [ ! -f imgui/imgui.h ]; then \
 		echo "Cloning ImGui ..."; \
@@ -29,22 +31,21 @@ ensure-json:
 		curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp; \
 	fi
 
-ensure-dirs:
+release-dirs:
 	mkdir -p build
-
-all: ensure-dirs ensure-imgui ensure-stbimg ensure-json $(OUTPUT) ensure-release
-
-$(OUTPUT): $(SOURCES)
-	$(CXX) $^ -o $@ $(INCLUDES) -lnx
-
-clean:
-	rm -rf build imgui lib nlohmann Release
-
-# ----- Release Bundle: .nro + assets + i18n + config.json -----
-ensure-release:
 	mkdir -p Release
-	cp $(OUTPUT) Release/ || { echo "NRO fehlt!"; exit 1; }
+
+# == Build-Rule ==
+$(OUTPUT_NRO): $(SOURCES) | ensure-imgui ensure-stbimg ensure-json release-dirs
+	$(CXX) $(SOURCES) -o $(OUTPUT_NRO) $(INCLUDES) -lnx
+
+# == Bundle: .nro, assets, i18n und config.json ==
+release-bundle: $(OUTPUT_NRO)
+	cp $(OUTPUT_NRO) Release/ || { echo "PokeEdit.nro fehlt!"; exit 1; }
 	cp -r assets Release/
 	cp -r i18n Release/
 	cp config.json Release/
-	@echo "Release-Bundle fertig in ./Release/"
+	@echo "Release-Bundle gebaut: Release/"
+
+clean:
+	rm -rf build imgui lib nlohmann Release
