@@ -1,17 +1,14 @@
-name: Build PokeEdit.nro bundle
+name: Build PokeEdit.nro
 
 on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install devkitPro toolchain
+      - name: Install devkitPro
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential git curl python3 wget
@@ -27,13 +24,14 @@ jobs:
           echo "DEVKITA64=/opt/devkitpro/devkitA64" >> $GITHUB_ENV
           echo "/opt/devkitpro/devkitA64/bin" >> $GITHUB_PATH
 
-      - name: Build project, fetches all includes/libs
+      - name: Build PokeEdit + Bundle
         run: |
           make clean
           make all
 
-      - name: Upload bundle
+      - name: Upload Release-Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: PokeEdit-release
+          name: PokeEdit-Release
           path: Release/
+          
