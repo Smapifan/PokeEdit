@@ -7,7 +7,7 @@ CXXFLAGS += -Isource -Iimgui -Ilib -Inlohmann
 
 include $(DEVKITPRO)/libnx/switch_rules
 
-TARGET      := build/PokeEdit
+TARGET      := PokeEdit
 APP_TITLE   := PokeEdit
 APP_AUTHOR  := Smapifan
 APP_VERSION := 1.0.0
@@ -16,7 +16,6 @@ ICON        := assets/icon.png
 
 .PHONY: all clean ensure-imgui ensure-stbimg ensure-json ensure-release
 
-# ==== Dynamische Fetch-Regeln für ImGui, stb_image, nlohmann/json ====
 ensure-imgui:
 	@if [ ! -f imgui/imgui.h ]; then \
 		echo "Cloning ImGui ..."; \
@@ -37,16 +36,7 @@ ensure-json:
 		curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp; \
 	fi
 
-all: ensure-imgui ensure-stbimg ensure-json $(TARGET).nro ensure-release
-
-# ----- Release Bundle: NRO + assets + i18n + config.json -----
-ensure-release:
-	mkdir -p Release
-	cp build/PokeEdit.nro Release/
-	cp -r assets Release/
-	cp -r i18n Release/
-	cp config.json Release/
-	@echo "Release-Bundle fertig: Release/"
+all: ensure-imgui ensure-stbimg ensure-json $(TARGET).nro
 
 clean:
-	rm -rf build imgui lib nlohmann Release
+	rm -rf build imgui lib nlohmann Release PokeEdit.nro
