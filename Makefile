@@ -2,13 +2,13 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif
 
-include $(DEVKITPRO)/libnx/switch_rules
-
 TARGET    := build/PokeEdit
 OUTPUT    := $(TARGET)
 APP_TITLE := PokeEdit
 APP_AUTHOR := Smapifan
 APP_VERSION := 1.0.0
+
+include $(DEVKITPRO)/libnx/switch_rules
 
 # ==== Abhängigkeiten automatisch holen (z.B. ImGui) ====
 IMGUI_TAG ?= v1.91.6
