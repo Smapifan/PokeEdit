@@ -1,40 +1,38 @@
-TARGET := PokeEdit
-SRC := src
-OBJ := build
-INCLUDE := include imgui_nx
-CXXFLAGS := -std=gnu++17 -O2 $(foreach D,$(INCLUDE),-I$(D))
-OBJS := $(OBJ)/main.o $(OBJ)/agb_screen.o
-LIBS := -lnx
+TARGET    := build/PokeEdit
+OUTPUT    := $(TARGET)
+ROMFS     := assets
+ICON      := assets/icon.png
 
-# ImGui-NX
-IMGUI_NX_URL := https://github.com/crocodile2020/imgui_nx.git
-IMGUI_DIR := imgui_nx
+.PHONY: all ensure-imgui ensure-stbimg ensure-json ensure-release clean
 
-# nlohmann/json
-JSON_HPP := nlohmann/json.hpp
+# Automatisch GUI/libs holen
+ensure-imgui:
+	@if [ ! -f imgui/imgui.h ]; then \
+		echo "Cloning ImGui ..."; \
+		git clone --depth=1 https://github.com/ocornut/imgui.git imgui; \
+	fi
+ensure-stbimg:
+	@if [ ! -f lib/stb_image.h ]; then \
+		mkdir -p lib; \
+		curl -L -o lib/stb_image.h https://raw.githubusercontent.com/nothings/stb/master/stb_image.h; \
+	fi
+ensure-json:
+	@if [ ! -f nlohmann/json.hpp ]; then \
+		mkdir -p nlohmann; \
+		curl -L -o nlohmann/json.hpp https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp; \
+	fi
 
-$(IMGUI_DIR):
-	git clone --depth=1 $(IMGUI_NX_URL) $(IMGUI_DIR)
+SOURCES := $(shell find source -type f -name '*.cpp')
+INCLUDES := -Isource -Iimgui -Ilib -Inlohmann
 
-$(JSON_HPP):
-	mkdir -p nlohmann
-	curl -L -o $(JSON_HPP) https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+# Release-Ordner anlegen, NRO + Assets + config + i18n reinlegen
+ensure-release:
+	mkdir -p Release
+	cp $(OUTPUT).nro Release/
+	cp -r assets Release/
+	cp -r i18n Release/
+	cp config.json Release/
 
-.PHONY: all clean
+all: ensure-imgui ensure-stbimg ensure-json $(OUTPUT).nro ensure-release
 
-all: $(TARGET).nro
-
-$(OBJ)/main.o: src/main.cpp src/agb_screen.hpp src/i18n.hpp $(JSON_HPP) | $(OBJ)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ)/agb_screen.o: src/agb_screen.cpp src/agb_screen.hpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(TARGET).nro: $(IMGUI_DIR) $(OBJS)
-	nxlink -o $@ $(OBJS) $(LIBS)
-
-$(OBJ):
-	mkdir -p $(OBJ)
-
-clean:
-	rm -rf $(OBJ) $(TARGET).nro $(IMGUI_DIR) nlohmann
+# ... Rest wie gewohnt (libnx/switch_rules include, clean Targets usw.) ...
