@@ -1,4 +1,4 @@
-name: Build & Bundle PokeEdit
+name: Build & Release PokeEdit NRO
 
 on:
   push:
@@ -16,43 +16,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build NRO
+      - name: Baue NRO via Makefile
         run: |
           make clean
           make
 
-      - name: Finde und kopiere NRO nach build/
+      - name: Prüfe, ob NRO existiert und bundle sie
         run: |
-          mkdir -p build
-          NRO_FILE=$(find . -maxdepth 2 -name "*.nro" | head -n1)
-          if [ -z "$NRO_FILE" ]; then
-            echo "ERROR: Keine NRO gefunden!"
+          if [ ! -f PokeEdit.nro ]; then
+            echo "FEHLER: PokeEdit.nro wurde nicht gebaut!"
             exit 1
           fi
-          echo "Gefundene NRO: $NRO_FILE"
-          cp "$NRO_FILE" build/PokeEdit.nro
-          ls -lh build/
-
-      - name: Bundle machen (optional)
-        run: |
           mkdir -p Release
-          cp build/PokeEdit.nro Release/
+          cp PokeEdit.nro Release/
           cp -r assets Release/ || true
           cp -r i18n Release/ || true
           cp config.json Release/ || true
           cd Release
-          zip PokeEdit_bundle.zip * || zip PokeEdit_bundle.zip PokeEdit.nro
+          zip -r PokeEdit_bundle.zip ./*
+          ls -lh PokeEdit_bundle.zip
 
-      - name: Upload nur NRO
+      - name: Upload Release-Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: PokeEdit.nro
-          path: build/PokeEdit.nro
-          if-no-files-found: error
-
-      - name: Upload Bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: PokeEdit-Bundle
+          name: PokeEdit-bundle
           path: Release/PokeEdit_bundle.zip
           if-no-files-found: error
