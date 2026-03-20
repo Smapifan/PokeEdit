@@ -1,4 +1,4 @@
-name: Build PokeEdit bundle
+name: Build & Upload PokeEdit.nro
 
 on:
   push:
@@ -10,34 +10,25 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     container:
       image: ghcr.io/smapifan/devkita64-pkmswitch:latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build main PokeEdit NRO
+      - name: Build NRO
         run: |
           make clean
           make
 
-      - name: Collect outputs
+      - name: Debug Zeige Build-Verzeichnis
         run: |
-          mkdir -p Release
-          [ -f build/PokeEdit.nro ] && cp build/PokeEdit.nro Release/ || { echo "Main NRO fehlt"; exit 1; }
+          ls -lh build/ || echo "build/ fehlt!"
+          find . -name "*.nro"
 
-      - name: Zip bundle
-        run: |
-          cd Release
-          zip PokeEdit_bundle.zip *
-          ls -la
-
-      - name: Upload artifact
+      - name: Upload PokeEdit.nro aus build/
         uses: actions/upload-artifact@v4
         with:
-          name: PokeEdit-bundle
-          path: Release/PokeEdit_bundle.zip
+          name: PokeEdit.nro
+          path: build/PokeEdit.nro
           if-no-files-found: error
