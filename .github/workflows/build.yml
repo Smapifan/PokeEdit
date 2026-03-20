@@ -1,4 +1,4 @@
-name: Build & Upload PokeEdit.nro
+name: Build PokeEdit.nro
 
 on:
   push:
@@ -16,19 +16,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build NRO
+      - name: Build NRO in build/
         run: |
           make clean
           make
 
-      - name: Debug Zeige Build-Verzeichnis
+      - name: Debug: Zeige NRO-Datei
         run: |
           ls -lh build/ || echo "build/ fehlt!"
-          find . -name "*.nro"
-
-      - name: Upload PokeEdit.nro aus build/
-        uses: actions/upload-artifact@v4
-        with:
-          name: PokeEdit.nro
-          path: build/PokeEdit.nro
-          if-no-files-found: error
+          ls -lh build/PokeEdit.nro || echo "PokeEdit.nro fehlt!"
