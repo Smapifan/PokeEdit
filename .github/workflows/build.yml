@@ -10,23 +10,26 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/smapifan/devkita64-pkmswitch:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install devkitPro toolchain (switch)
-        uses: devkitPro/ci-action@v1
-        with:
-          dkptype: 'switch'
-      
-      - name: Build NRO mit ausführlichem Log
+      - name: Check Toolchain
+        run: |
+          which aarch64-none-elf-g++
+          aarch64-none-elf-g++ --version
+          echo $DEVKITPRO
+
+      - name: Build NRO mit Log
         run: |
           make clean
           make V=1
           ls -lh build/
           find . -name "*.nro"
 
-      - name: Upload PokeEdit.nro als Artifact
+      - name: Upload NRO
         uses: actions/upload-artifact@v4
         with:
           name: PokeEdit.nro
