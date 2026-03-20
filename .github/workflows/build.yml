@@ -23,7 +23,7 @@ jobs:
           make clean
           make
 
-      - name: Debug: Zeige Build-Ordner und NRO-Dateien
+      - name: Debug Zeige Build-Ordner und NRO-Dateien
         run: |
           echo ">>> Inhalt von build/:"
           ls -lh build/ || echo "build/ nicht vorhanden!"
