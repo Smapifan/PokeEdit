@@ -1,16 +1,13 @@
 FROM ubuntu:22.04
 
-RUN apt-get update && \
-    apt-get install -y git curl python3 build-essential wget && \
-    rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y wget git build-essential python3
 
-# Installiere devkitPro & libnx
-RUN wget https://apt.devkitpro.org/install-devkitpro-pacman && chmod +x install-devkitpro-pacman && \
-    ./install-devkitpro-pacman -y && \
-    /usr/bin/dkp-pacman -Syu --noconfirm && \
-    /usr/bin/dkp-pacman -S --noconfirm devkitA64 libnx switch-tools
+RUN wget https://github.com/devkitPro/pacman/releases/download/v1.0.2/devkitpro-pacman.deb
+RUN dpkg -i devkitpro-pacman.deb
+RUN apt-get update && apt-get install -y devkitpro-pacman
 
 ENV DEVKITPRO=/opt/devkitpro
-ENV DEVKITA64=/opt/devkitpro/devkitA64
+ENV PATH=$PATH:/opt/devkitpro/devkitA64/bin
 
-WORKDIR /workspace
+RUN dkp-pacman -Syu --noconfirm switch-dev
+RUN dkp-pacman -S --noconfirm switch-libnx switch-mesa switch-mbedtls switch-zlib switch-glad
