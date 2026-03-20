@@ -2,6 +2,9 @@ ifeq ($(strip $(DEVKITPRO)),)
 $(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>/devkitpro")
 endif
 
+CFLAGS   += -Isrc -Iimgui -Ilib -Inlohmann
+CXXFLAGS += -Isrc -Iimgui -Ilib -Inlohmann
+
 include $(DEVKITPRO)/libnx/switch_rules
 
 TARGET      := build/PokeEdit
@@ -11,12 +14,9 @@ APP_VERSION := 1.0.0
 ROMFS       := assets
 ICON        := assets/icon.png
 
-# jetzt "src" statt "source"
-INCLUDES    := -Isrc -Iimgui -Ilib -Inlohmann
-
 .PHONY: all clean ensure-imgui ensure-stbimg ensure-json ensure-release
 
-# ==== Dynamische Fetch-Regeln für Includes ====
+# ==== Dynamische Fetch-Regeln für ImGui, stb_image, nlohmann/json ====
 ensure-imgui:
 	@if [ ! -f imgui/imgui.h ]; then \
 		echo "Cloning ImGui ..."; \
