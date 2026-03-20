@@ -23,6 +23,13 @@ jobs:
           make clean
           make
 
+      - name: Debug: Zeige Build-Ordner und NRO-Dateien
+        run: |
+          echo ">>> Inhalt von build/:"
+          ls -lh build/ || echo "build/ nicht vorhanden!"
+          echo ">>> Alle *.nro im Projekt:"
+          find . -name "*.nro" || echo "Keine .nro gefunden"
+
       - name: Collect outputs
         run: |
           mkdir -p Release
