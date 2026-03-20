@@ -1,6 +1,10 @@
-name: Probe-Build NRO (Debug only)
+name: Build & Bundle PokeEdit
 
 on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
   workflow_dispatch:
 
 jobs:
@@ -12,23 +16,43 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Zeige Quell-Baum
-        run: |
-          echo "==== Repo-Baum ===="
-          find . | sort
-          echo "==== Inhalt von source/ ===="
-          ls -lh source/ || echo "source fehlt oder leer!"
-          echo "==== Inhalt von src/ ===="
-          ls -lh src/ || echo "src fehlt oder leer!"
-
-      - name: Baue NRO (ohne weitere Schritte)
+      - name: Build NRO
         run: |
           make clean
           make
 
-      - name: Zeige build/-Inhalt (Debug)
+      - name: Finde und kopiere NRO nach build/
         run: |
-          echo "==== Inhalt von build/ ===="
-          ls -lh build/ || echo "build/ fehlt!"
-          echo "==== Finde alle .nro ===="
-          find . -name "*.nro" || echo "Keine .nro gefunden!"
+          mkdir -p build
+          NRO_FILE=$(find . -maxdepth 2 -name "*.nro" | head -n1)
+          if [ -z "$NRO_FILE" ]; then
+            echo "ERROR: Keine NRO gefunden!"
+            exit 1
+          fi
+          echo "Gefundene NRO: $NRO_FILE"
+          cp "$NRO_FILE" build/PokeEdit.nro
+          ls -lh build/
+
+      - name: Bundle machen (optional)
+        run: |
+          mkdir -p Release
+          cp build/PokeEdit.nro Release/
+          cp -r assets Release/ || true
+          cp -r i18n Release/ || true
+          cp config.json Release/ || true
+          cd Release
+          zip PokeEdit_bundle.zip * || zip PokeEdit_bundle.zip PokeEdit.nro
+
+      - name: Upload nur NRO
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokeEdit.nro
+          path: build/PokeEdit.nro
+          if-no-files-found: error
+
+      - name: Upload Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: PokeEdit-Bundle
+          path: Release/PokeEdit_bundle.zip
+          if-no-files-found: error
