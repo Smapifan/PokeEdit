@@ -1,37 +1,40 @@
-TARGET  := PokeEdit
-SRC_DIR := src
-OBJ_DIR := build
-BUILD   := $(OBJ_DIR)
-INCLUDE := include imgui lib
+TARGET := PokeEdit
+SRC := src
+OBJ := build
+INCLUDE := include imgui_nx
 CXXFLAGS := -std=gnu++17 -O2 $(foreach D,$(INCLUDE),-I$(D))
-OBJS    := $(addprefix $(OBJ_DIR)/,main.o ui.o)
-LIBS    := -lnx
+OBJS := $(OBJ)/main.o $(OBJ)/agb_screen.o
+LIBS := -lnx
 
+# ImGui-NX
+IMGUI_NX_URL := https://github.com/crocodile2020/imgui_nx.git
+IMGUI_DIR := imgui_nx
+
+# nlohmann/json
 JSON_HPP := nlohmann/json.hpp
-STB := lib/stb_image.h
 
-.PHONY: all clean imgui stb
+$(IMGUI_DIR):
+	git clone --depth=1 $(IMGUI_NX_URL) $(IMGUI_DIR)
+
+$(JSON_HPP):
+	mkdir -p nlohmann
+	curl -L -o $(JSON_HPP) https://raw.githubusercontent.com/nlohmann/json/develop/single_include/nlohmann/json.hpp
+
+.PHONY: all clean
 
 all: $(TARGET).nro
 
-# Auto-Download ImGui + stb_image
-imgui:
-	mkdir -p include/imgui
-	git clone --depth=1 https://github.com/ocornut/imgui include/imgui
-
-$(STB):
-	curl -L -o $@ https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
-
-$(OBJ_DIR)/main.o: src/main.cpp imgui $(STB) $(JSON_HPP)
-	mkdir -p $(OBJ_DIR)
+$(OBJ)/main.o: src/main.cpp src/agb_screen.hpp src/i18n.hpp $(JSON_HPP) | $(OBJ)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/ui.o: src/ui.cpp src/ui.hpp
-	mkdir -p $(OBJ_DIR)
+$(OBJ)/agb_screen.o: src/agb_screen.cpp src/agb_screen.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(TARGET).nro: $(OBJS)
-	nxlink -o $@ $^ $(LIBS)
+$(TARGET).nro: $(IMGUI_DIR) $(OBJS)
+	nxlink -o $@ $(OBJS) $(LIBS)
+
+$(OBJ):
+	mkdir -p $(OBJ)
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET).nro
+	rm -rf $(OBJ) $(TARGET).nro $(IMGUI_DIR) nlohmann
