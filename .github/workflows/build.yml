@@ -16,6 +16,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Suche Toolchain-Dateien
+        run: |
+          echo "Alle g++-Binaries:"
+          find / -name 'aarch64-none-elf-g++' 2>/dev/null
+          echo "Alle devkitpro-Verzeichnisse:"
+          find / -name 'devkitpro' 2>/dev/null
+          echo "PATH:"
+          echo $PATH
+
       - name: Check Toolchain
         run: |
           which aarch64-none-elf-g++
