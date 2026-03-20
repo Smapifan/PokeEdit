@@ -1,36 +1,45 @@
 name: Build PokeEdit Bundle
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: ghcr.io/smapifan/devkita64-pokeedit:latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Setup devkitPro Toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git curl python3 wget
-          wget https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x install-devkitpro-pacman
-          sudo ./install-devkitpro-pacman -y
-          sudo dkp-pacman -Syu --noconfirm
-          sudo dkp-pacman -S --noconfirm devkitA64 libnx switch-tools
-
-      - name: Set environment
-        run: |
-          echo "DEVKITPRO=/opt/devkitpro" >> $GITHUB_ENV
-          echo "DEVKITA64=/opt/devkitpro/devkitA64" >> $GITHUB_ENV
-          echo "/opt/devkitpro/devkitA64/bin" >> $GITHUB_PATH
-
-      - name: Build PokeEdit Bundle
+      - name: Build main PokeEdit NRO
         run: |
           make clean
-          make all
+          make
 
-      - name: Upload Release-Bundle
+      - name: Collect outputs
+        run: |
+          mkdir -p Release
+          [ -f build/PokeEdit.nro ] && cp build/PokeEdit.nro Release/ || { echo "Main NRO fehlt"; exit 1; }
+          cp -r assets Release/
+          cp -r i18n Release/
+          cp config.json Release/
+
+      - name: Zip bundle
+        run: |
+          cd Release
+          zip PokeEdit_bundle.zip *
+          ls -la
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PokeEdit-Release
-          path: Release/
+          name: PokeEdit-bundle
+          path: Release/PokeEdit_bundle.zip
+          if-no-files-found: error
