@@ -1,4 +1,4 @@
-name: Build & Upload PokeEdit.nro (mit maximalem Logging)
+name: Build & Upload PokeEdit.nro (offizielle devkitPro Toolchain)
 
 on:
   push:
@@ -11,9 +11,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/smapifan/devkita64-pkmswitch:latest
+      image: devkitpro/devkitpro:latest
     steps:
-      - name: Starte Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Zeige Verzeichnisstruktur (frisch geclont)
@@ -26,44 +26,32 @@ jobs:
           cat .gitignore || echo "Keine .gitignore vorhanden"
           cat Makefile || echo "Makefile fehlt"
 
-      - name: Zeige devkitPro-Tools und Container-Umgebung
+      - name: Zeige Toolchain + ENV
         run: |
-          echo "==== Verfügbare Toolchain ===="
-          which aarch64-none-elf-g++
+          echo "==== Toolchain ===="
+          which aarch64-none-elf-g++ || echo "Compiler fehlt"
           aarch64-none-elf-g++ --version || echo "Compiler-Version nicht abrufbar"
-          echo "==== ENV-Variablen ===="
+          echo "==== ENV ===="
           env | sort
-          echo "==== DEVKITPRO: $DEVKITPRO ===="
+          echo "DEVKITPRO: $DEVKITPRO"
 
-      - name: Debug Zeige imgui-Ordner (falls vorhanden)
-        run: ls -lh imgui || echo "imgui fehlt oder nicht geclont"
-
-      - name: Build NRO (mit expliziten Logs)
+      - name: Build NRO (mit ausführlichem Log)
         run: |
-          echo "==== Führe make clean aus ===="
+          echo "==== make clean ===="
           make clean
-          echo "==== Führe make aus (Build-Log) ===="
+          echo "==== make V=1 (voller Buildlog) ===="
           make V=1 || { echo 'MAKE FEHLER'; exit 1; }
-          echo "==== Build-Ordner nach make ===="
-          ls -lh build/ || echo "build/ fehlt!"
+          echo "==== Build-Ordner danach ===="
+          ls -lh build/ || echo "build/ fehlt"
           find . -name "*.nro" -exec ls -lh {} \;
-          find . -name "*.elf" -exec ls -lh {} \;
-          echo "==== Endgültige Repo-Struktur ===="
           tree -L 3 || find . | sort
 
-      - name: Zeige alle Makefile-Vars, die für den Build wichtig sind
+      - name: Zeige Content der Build-Datei(en)
         run: |
-          echo "==== Erkennte Makefile TARGET/APP_TITLE ... ===="
-          grep -E 'TARGET|APP_TITLE|APP_AUTHOR|APP_VERSION|ROMFS|ICON|SRCDIR' Makefile || echo "Keine relevanten Vars gefunden"
+          echo "==== file build/PokeEdit.nro ===="
+          file build/PokeEdit.nro || echo "PokeEdit.nro fehlt"
 
-      - name: Zeige Content der letzten Build-Dateien
-        run: |
-          echo "==== Content von build/PokeEdit.nro (file info) ===="
-          file build/PokeEdit.nro || echo "PokeEdit.nro existiert nicht!"
-          echo "==== Content von build/PokeEdit.elf (file info) ===="
-          file build/PokeEdit.elf || echo "PokeEdit.elf existiert nicht!"
-
-      - name: Upload PokeEdit.nro direkt aus build/ (abbrechen wenn fehlt)
+      - name: Upload PokeEdit.nro als Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PokeEdit.nro
