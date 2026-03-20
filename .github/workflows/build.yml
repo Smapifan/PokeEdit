@@ -1,4 +1,4 @@
-name: Build & Upload PokeEdit.nro (devkitPro-Container, PATH-Fix, Logging)
+name: Build & Upload PokeEdit.nro (devkitPro-Container, Debug-Tools, Logging)
 
 on:
   push:
