@@ -11,6 +11,9 @@ APP_VERSION := 1.0.0
 ROMFS       := assets
 ICON        := assets/icon.png
 
+# jetzt "src" statt "source"
+INCLUDES    := -Isrc -Iimgui -Ilib -Inlohmann
+
 .PHONY: all clean ensure-imgui ensure-stbimg ensure-json ensure-release
 
 # ==== Dynamische Fetch-Regeln für Includes ====
