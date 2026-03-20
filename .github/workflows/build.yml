@@ -1,59 +1,34 @@
-name: Build PokeEdit Bundle
+name: Probe-Build NRO (Debug only)
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     container:
       image: ghcr.io/smapifan/devkita64-pkmswitch:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug Quellstruktur src/
+      - name: Zeige Quell-Baum
         run: |
-          echo "Files in src/:"
-          ls -lh src/ || echo "src/ fehlt oder leer!"
-          echo "Repo-Baum:"
+          echo "==== Repo-Baum ===="
           find . | sort
+          echo "==== Inhalt von source/ ===="
+          ls -lh source/ || echo "source fehlt oder leer!"
+          echo "==== Inhalt von src/ ===="
+          ls -lh src/ || echo "src fehlt oder leer!"
 
-      - name: Build main PokeEdit NRO + Bundle
+      - name: Baue NRO (ohne weitere Schritte)
         run: |
           make clean
           make
 
-      - name: Debug Zeige Build-Ordner und NRO-Dateien
+      - name: Zeige build/-Inhalt (Debug)
         run: |
-          echo ">>> Inhalt von build/:"
-          ls -lh build/ || echo "build/ nicht vorhanden!"
-          echo ">>> Alle *.nro im Projekt:"
-          find . -name "*.nro" || echo "Keine .nro gefunden"
-
-      - name: Collect outputs
-        run: |
-          mkdir -p Release
-          [ -f build/PokeEdit.nro ] && cp build/PokeEdit.nro Release/ || { echo "Main NRO fehlt"; exit 1; }
-          cp -r assets Release/
-          cp -r i18n Release/
-          cp config.json Release/
-
-      - name: Zip bundle
-        run: |
-          cd Release
-          zip PokeEdit_bundle.zip *
-          ls -la
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PokeEdit-bundle
-          path: Release/PokeEdit_bundle.zip
-          if-no-files-found: error
+          echo "==== Inhalt von build/ ===="
+          ls -lh build/ || echo "build/ fehlt!"
+          echo "==== Finde alle .nro ===="
+          find . -name "*.nro" || echo "Keine .nro gefunden!"
