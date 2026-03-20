@@ -1,4 +1,4 @@
-name: Build & Upload PokeEdit.nro (mit devkitPro/ci-action)
+name: Build & Upload PokeEdit.nro (devkitPro-Container, PATH-Fix, Logging)
 
 on:
   push:
@@ -13,32 +13,54 @@ jobs:
     container:
       image: ghcr.io/smapifan/devkita64-pkmswitch:latest
     steps:
-      - name: Checkout
+      - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Suche Toolchain-Dateien
+      - name: Zeige Repo-Struktur und wichtige Dateien
+        run: |
+          echo "==== Repo-Baum ===="
+          tree -L 3 || find . | sort
+          echo "==== Files in source/ ===="
+          ls -lh source/ || echo "source fehlt!"
+          echo "==== Zeige Makefile ===="
+          cat Makefile || echo "Makefile fehlt"
+
+      - name: Suche Toolchain-Dateien und devkitpro-Ordner
         run: |
           echo "Alle g++-Binaries:"
           find / -name 'aarch64-none-elf-g++' 2>/dev/null
           echo "Alle devkitpro-Verzeichnisse:"
           find / -name 'devkitpro' 2>/dev/null
-          echo "PATH:"
-          echo $PATH
 
-      - name: Check Toolchain
+      - name: Fix PATH für devkitA64 und Toolchain-Check
         run: |
+          export PATH="/opt/devkitpro/devkitA64/bin:$PATH"
+          echo "PATH: $PATH"
           which aarch64-none-elf-g++
           aarch64-none-elf-g++ --version
-          echo $DEVKITPRO
+          echo "DEVKITPRO: $DEVKITPRO"
 
-      - name: Build NRO mit Log
+      - name: Build NRO mit Logging und PATH-Fix
         run: |
+          export PATH="/opt/devkitpro/devkitA64/bin:$PATH"
+          echo "==== make clean ===="
           make clean
-          make V=1
-          ls -lh build/
-          find . -name "*.nro"
+          echo "==== make V=1 (Build-Log) ===="
+          make V=1 || { echo 'MAKE FEHLER'; exit 1; }
+          echo "==== Build-Ordner nach make ===="
+          ls -lh build/ || echo "build/ fehlt!"
+          find . -name "*.nro" -exec ls -lh {} \;
+          find . -name "*.elf" -exec ls -lh {} \;
+          echo "==== Endgültige Repo-Struktur ===="
+          tree -L 3 || find . | sort
 
-      - name: Upload NRO
+      - name: Zeige Content der Build-Datei(en)
+        run: |
+          export PATH="/opt/devkitpro/devkitA64/bin:$PATH"
+          echo "==== file build/PokeEdit.nro ===="
+          file build/PokeEdit.nro || echo "PokeEdit.nro fehlt!"
+
+      - name: Upload PokeEdit.nro als Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PokeEdit.nro
