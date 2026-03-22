@@ -29,7 +29,7 @@ jobs:
           set -eux
           mkdir -p Release
           ZIP_NAME="PokeEdit_${GITHUB_SHA}.zip"
-          (cd dist && zip -r "../Release/${ZIP_NAME}" PKMswitch)
+          (cd dist && zip -r "../Release/${ZIP_NAME}" PokeEdit)
           ls -la Release
 
       - name: Upload artifact
