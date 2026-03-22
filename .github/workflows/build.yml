@@ -1,4 +1,4 @@
-name: Build PKMswitch bundle
+name: Build PokeEdit bundle
 
 on:
   push:
