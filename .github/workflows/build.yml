@@ -28,13 +28,13 @@ jobs:
         run: |
           set -eux
           mkdir -p Release
-          ZIP_NAME="PKMswitch_${GITHUB_SHA}.zip"
+          ZIP_NAME="PokeEdit_${GITHUB_SHA}.zip"
           (cd dist && zip -r "../Release/${ZIP_NAME}" PKMswitch)
           ls -la Release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PKMswitch-bundle
+          name: PokeEdit-bundle
           path: Release/*.zip
           if-no-files-found: error
