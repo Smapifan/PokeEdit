@@ -11,7 +11,7 @@ if [ ! -f imgui/imgui.h ]; then
   git clone --depth=1 --branch "${IMGUI_TAG}" https://github.com/ocornut/imgui.git imgui
 fi
 
-echo "[dist] Building PKMswitch (verbose)..."
+echo "[dist] Building PokeEdit (verbose)..."
 make V=1
 
 echo "[dist] Root after make:"
@@ -19,49 +19,26 @@ ls -la
 echo "[dist] build/ after make:"
 ls -la build || true
 
-# Locate PKMswitch.nro robustly
+# Locate PokeEdit.nro robustly
 NRO=""
-if [ -f "PKMswitch.nro" ]; then
-  NRO="PKMswitch.nro"
-elif [ -f "build/PKMswitch.nro" ]; then
-  NRO="build/PKMswitch.nro"
+if [ -f "PokeEdit.nro" ]; then
+  NRO="PokeEdit.nro"
+elif [ -f "build/PokeEdit.nro" ]; then
+  NRO="build/PokeEdit.nro"
 else
-  NRO="$(find . -maxdepth 3 -name 'PKMswitch.nro' -print -quit || true)"
+  NRO="$(find . -maxdepth 3 -name 'PokeEdit.nro' -print -quit || true)"
 fi
 
 if [ -z "${NRO}" ] || [ ! -f "${NRO}" ]; then
-  echo "[dist] ERROR: PKMswitch.nro not found after make!"
-  exit 1
-fi
-
-echo "[dist] Building AssetLoader plugin..."
-make -C plugin/AssetLoader
-
-# Locate plugin output (prefer .bin if it exists, else accept .nro for now)
-PLUGIN_OUT=""
-if [ -f "plugin/AssetLoader/build/AssetLoader.bin" ]; then
-  PLUGIN_OUT="plugin/AssetLoader/build/AssetLoader.bin"
-elif [ -f "plugin/AssetLoader/build/AssetLoader.nro" ]; then
-  PLUGIN_OUT="plugin/AssetLoader/build/AssetLoader.nro"
-else
-  PLUGIN_OUT="$(find plugin/AssetLoader -maxdepth 3 -name 'AssetLoader.*' -print -quit || true)"
-fi
-
-if [ -z "${PLUGIN_OUT}" ] || [ ! -f "${PLUGIN_OUT}" ]; then
-  echo "[dist] ERROR: AssetLoader output not found."
-  ls -la plugin/AssetLoader || true
-  ls -la plugin/AssetLoader/build || true
+  echo "[dist] ERROR: PokeEdit.nro not found after make!"
   exit 1
 fi
 
 echo "[dist] Creating release bundle folder (no sdmc layout)..."
 rm -rf dist
-mkdir -p dist/PKMswitch/PKMswitch.plugin
+mkdir -p dist/PokeEdit
 
-cp -f "${NRO}" dist/PKMswitch/PKMswitch.nro
-cp -f plugin/AssetLoader/manifest.json dist/PKMswitch/PKMswitch.plugin/manifest.json
-cp -f "${PLUGIN_OUT}" dist/PKMswitch/PKMswitch.plugin/AssetLoader.bin
+cp -f "${NRO}" dist/PokeEdit/PokeEdit.nro
 
 echo "[dist] Bundle ready:"
 find dist -maxdepth 4 -type f -print
-
