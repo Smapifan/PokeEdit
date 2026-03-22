@@ -1,8 +1,10 @@
+name: Build PKMswitch bundle
+
 on:
   push:
-    branches: [main, master]
+    branches: [ main, master ]
   pull_request:
-    branches: [main, master]
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -17,19 +19,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # MAIN PKMswitch NRO
-      - name: Preflight source check (Main)
+      - name: Build bundle (no sdmc layout)
         run: |
-          if [ ! -f source/main.cpp ]; then
-            echo "[CI] ERROR: source/main.cpp nicht gefunden!"
-            exit 1
-          fi
-          if ! grep -q 'int main' source/main.cpp; then
-            echo "[CI] ERROR: Kein Entry Point in source/main.cpp!"
-            exit 1
-          fi
+          chmod +x ci/dist.sh
+          ./ci/dist.sh
 
-      - name: Build PKMswitch NRO
+      - name: Zip bundle
         run: |
-          make clean
-          make
+          set -eux
+          mkdir -p Release
+          ZIP_NAME="PKMswitch_${GITHUB_SHA}.zip"
+          (cd dist && zip -r "../Release/${ZIP_NAME}" PKMswitch)
+          ls -la Release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PKMswitch-bundle
+          path: Release/*.zip
+          if-no-files-found: error
